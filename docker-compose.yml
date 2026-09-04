@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: token-ecosystem-db
+    environment:
+      POSTGRES_USER: tokenuser
+      POSTGRES_PASSWORD: tokenpass
+      POSTGRES_DB: token_ecosystem
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tokenuser"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: token-ecosystem-cache
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Main Application
+  app:
+    build: .
+    container_name: token-ecosystem-app
+    environment:
+      DATABASE_URL: postgresql://tokenuser:tokenpass@postgres:5432/token_ecosystem
+      REDIS_URL: redis://redis:6379/0
+      PLATFORM_ENV: production
+      PLATFORM_HOST: 0.0.0.0
+      PLATFORM_PORT: 8000
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src
+      - ./scripts:/app/scripts
+    restart: unless-stopped
+
+  # Celery Worker (for background tasks)
+  celery_worker:
+    build: .
+    container_name: token-ecosystem-worker
+    command: celery -A src.tasks.celery_app worker --loglevel=info
+    environment:
+      DATABASE_URL: postgresql://tokenuser:tokenpass@postgres:5432/token_ecosystem
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  default:
+    name: token-ecosystem-network

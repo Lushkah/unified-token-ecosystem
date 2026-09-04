@@ -1,0 +1,37 @@
+{
+  "name": "unified-token-ecosystem",
+  "version": "0.2.0",
+  "description": "Unified Token AI Ecosystem - Merged intelligent agents and blockchain security platform",
+  "main": "main.py",
+  "scripts": {
+    "start": "python main.py",
+    "dev": "python main.py --reload",
+    "test": "pytest",
+    "lint": "flake8 . && black --check . && mypy .",
+    "format": "black . && isort .",
+    "docker-up": "docker-compose up -d",
+    "docker-down": "docker-compose down",
+    "migrate": "alembic upgrade head",
+    "deploy-contracts": "python scripts/deploy-contracts.py"
+  },
+  "keywords": [
+    "ai",
+    "agents",
+    "blockchain",
+    "ethereum",
+    "token",
+    "smart-contracts",
+    "automation",
+    "ecosystem"
+  ],
+  "author": "Lushkah",
+  "license": "MIT",
+  "dependencies": {
+    "ethers": "^6.0.0",
+    "web3": "^1.10.0"
+  },
+  "devDependencies": {
+    "hardhat": "^2.19.0",
+    "@openzeppelin/hardhat-upgrades": "^2.0.0"
+  }
+}
